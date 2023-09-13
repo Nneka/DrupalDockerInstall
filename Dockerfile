@@ -1,4 +1,11 @@
 FROM php:8.1-apache
+
+RUN apt-get update && apt-get install -y \
+		libfreetype-dev \
+		libjpeg62-turbo-dev \
+		libpng-dev \
+	&& docker-php-ext-configure gd --with-freetype --with-jpeg \
+	&& docker-php-ext-install -j$(nproc) gd
   
 # install the PHP extensions we need
 RUN set -ex; \
@@ -11,13 +18,11 @@ RUN set -ex; \
 	\
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
-		libjpeg-dev \
-		libpng-dev \
 		libpq-dev \
 		libzip-dev \
-                libfreetype6-dev \
-                sendmail \
-                vim \
+        sendmail \
+        vim \
+        git \
 	; \
         \
 	docker-php-ext-configure gd --with-freetype=/usr --with-jpeg=/usr; \
@@ -44,6 +49,8 @@ RUN set -ex; \
 	apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false; \
 	rm -rf /var/lib/apt/lists/*
 
+#Install composer    
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 # set recommended PHP.ini settings
 # see https://secure.php.net/manual/en/opcache.installation.php
 RUN { \
@@ -77,7 +84,16 @@ EXPOSE 80
 
 EXPOSE 443
 
-COPY config/holmesinc.conf /etc/apache2/sites-enabled/holmesinc.conf
+COPY config/develop.conf /etc/apache2/sites-enabled/develop.conf
+
+#### Install Composer ####
+COPY config/composer.sh /tmp
+RUN chmod +777 /tmp/composer.sh
+RUN /tmp/composer.sh
+RUN rm /tmp/composer.sh
+### End Composer install ###
+
+
 
 WORKDIR /var/www/html
 
