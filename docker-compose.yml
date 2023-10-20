@@ -19,6 +19,7 @@ services:
     build: apachephp
     container_name: $WEB_NAME
     volumes:
+      - /var/www/html/drupal_demo
       - ./docroot:/var/www/html
       - ./config:$CONFIG_DIRECTORY
       - ./apache_log:$APACHE_LOGS
